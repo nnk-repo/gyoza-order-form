@@ -1,0 +1,608 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+<title>Gyoza House — Registro de pedidos</title>
+<meta name="theme-color" content="#111827"/>
+<style>
+:root{
+  --bg:#f7f7f8; --card:#ffffff; --text:#111827; --muted:#6b7280; --line:#e5e7eb;
+  --accent:#111827; --accent2:#f3f4f6; --danger:#b91c1c; --ok:#166534;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--text)}
+.app{max-width:760px;margin:0 auto;padding:14px 14px 120px}
+h1{font-size:24px;margin:6px 0 2px}
+.sub{color:var(--muted);font-size:13px;margin-bottom:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;margin:12px 0}
+.card h2{font-size:17px;margin:0 0 4px}
+.card p{font-size:13px;color:var(--muted);margin:0 0 12px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:560px){.grid2{grid-template-columns:1fr}}
+label{display:block;font-size:13px;font-weight:650}
+input,select,textarea{width:100%;font:inherit;font-size:16px;border:1px solid var(--line);border-radius:12px;padding:12px;background:#fff;color:var(--text);margin-top:5px}
+textarea{min-height:82px;resize:vertical}
+.row{display:flex;align-items:center;justify-content:space-between;gap:12px;border:1px solid var(--line);border-radius:12px;padding:10px 11px;margin:8px 0;background:#fff}
+.name{min-width:0}
+.name b{display:block;font-size:14px}
+.name small{display:block;color:var(--muted);font-size:12px;margin-top:2px}
+.step{display:flex;align-items:center;gap:8px;flex:none}
+.step button,.btn{min-width:44px;min-height:44px;border-radius:11px;border:1px solid var(--line);background:#fff;color:var(--text);font-size:20px;font-weight:700;touch-action:manipulation}
+.step button:disabled{opacity:.28}
+.step .num{width:26px;text-align:center;font-weight:800}
+.btn{font-size:14px;padding:0 14px;min-width:auto}
+.btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.btn.danger{color:var(--danger)}
+.section-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.pill{font-size:12px;border-radius:999px;padding:5px 8px;background:#f3f4f6;color:#374151}
+.config{border:1px solid var(--line);border-radius:14px;padding:12px;margin-top:12px}
+.config-title{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.choice-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:8px 0 12px}
+.choice{min-height:44px;border:1px solid var(--line);border-radius:11px;background:#fff;padding:8px 10px;font-size:13px;font-weight:650}
+.choice.active{border-color:#111827;background:#f3f4f6}
+.counterline{display:flex;justify-content:space-between;align-items:center;margin-top:8px}
+.counterline strong.bad{color:var(--danger)}
+.counterline strong.ok{color:var(--ok)}
+.summary{font-size:14px}
+.summary h3{font-size:14px;margin:12px 0 6px}
+.sumrow{display:flex;justify-content:space-between;gap:10px;margin:5px 0}
+.sumrow.total{font-size:18px;font-weight:800;border-top:1px solid var(--line);padding-top:10px;margin-top:10px}
+.note{font-size:12px;color:var(--muted)}
+.error{color:var(--danger);font-size:13px;font-weight:650;margin-top:8px}
+.success{color:var(--ok);font-size:13px;font-weight:650;margin-top:8px}
+.bottom{position:fixed;left:0;right:0;bottom:0;padding:10px 12px calc(10px + env(safe-area-inset-bottom));background:rgba(247,247,248,.96);border-top:1px solid var(--line);backdrop-filter:blur(8px)}
+.bottom-inner{max-width:760px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.total-big small{display:block;color:var(--muted);font-size:11px}
+.total-big strong{font-size:24px}
+.hidden{display:none!important}
+.sep{height:1px;background:var(--line);margin:12px 0}
+.toggleline{display:flex;align-items:center;gap:9px;margin-top:8px}
+.toggleline input{width:auto;margin:0;transform:scale(1.2)}
+</style>
+</head>
+<body>
+<div class="app">
+  <h1>Registro de pedido</h1>
+  <div class="sub">Gyoza House · versión móvil</div>
+
+  <div class="card">
+    <h2>Información</h2>
+    <div class="grid2">
+      <label>Canal
+        <select id="channel">
+          <option>WhatsApp</option><option>Rappi</option><option>PedidosYa</option><option>DiDi</option><option>Manual</option>
+        </select>
+      </label>
+      <label>Cliente <span class="note">(opcional)</span><input id="customer" placeholder="Nombre"/></label>
+      <label>Teléfono <span class="note">(opcional)</span><input id="phone" inputmode="tel" placeholder="+51..."/></label>
+      <label>Entrega
+        <select id="fulfillment"><option>Delivery</option><option>Pickup</option></select>
+      </label>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Standalone</h2>
+    <p>Cada caja de gyozas incluye 1 salsa.</p>
+    <div id="standalone"></div>
+    <div id="standSauceWrap" class="hidden">
+      <div class="sep"></div>
+      <div class="section-head">
+        <div><b>Salsas incluidas</b><div class="note">Máximo = número de cajas standalone</div></div>
+        <span id="standSauceStatus" class="pill"></span>
+      </div>
+      <div id="standSauces"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="section-head">
+      <div><h2>Gyoza Set</h2><p>S/58 base · Hongos +2 · BBQ +4 · Shiitake +1</p></div>
+      <button id="addSet" class="btn primary" type="button">+ Set</button>
+    </div>
+    <div id="sets"></div>
+  </div>
+
+  <div class="card">
+    <div class="section-head">
+      <div><h2>Group Set</h2><p>S/179 · promo automática -15%</p></div>
+      <button id="addGroup" class="btn primary" type="button">+ Group</button>
+    </div>
+    <div id="groups"></div>
+  </div>
+
+  <div class="card">
+    <h2>Salsas extra</h2>
+    <div id="extraSauces"></div>
+
+    <div class="row">
+      <div class="name"><b>Trío de salsas</b><small>S/7 · 3 salsas a elección</small></div>
+      <div class="step">
+        <button id="trioMinus" type="button">−</button><span id="trioQty" class="num">0</span><button id="trioPlus" type="button">+</button>
+      </div>
+    </div>
+    <div id="trios"></div>
+  </div>
+
+  <div class="card">
+    <h2>Entrega y ajustes</h2>
+    <label class="toggleline"><input id="includeDelivery" type="checkbox"/> Incluir delivery</label>
+    <div id="deliveryWrap" class="hidden" style="margin-top:10px">
+      <label>Costo delivery (S/)<input id="delivery" type="number" min="0" step="0.5" value="0" inputmode="decimal"/></label>
+    </div>
+    <div class="grid2" style="margin-top:10px">
+      <label>Descuento manual (S/)<input id="manualDiscount" type="number" min="0" step="0.5" value="0" inputmode="decimal"/></label>
+      <label>Hora solicitada<input id="requestedTime" type="time"/></label>
+    </div>
+    <label style="margin-top:10px">Notas<textarea id="notes" placeholder="Sin cubiertos, timbre, referencia..."></textarea></label>
+  </div>
+
+  <div class="card">
+    <h2>Resumen cocina</h2>
+    <div id="kitchen" class="summary"></div>
+  </div>
+
+  <div class="card">
+    <h2>Resumen financiero</h2>
+    <div id="finance" class="summary"></div>
+    <div id="validationMsg"></div>
+  </div>
+</div>
+
+<div class="bottom">
+  <div class="bottom-inner">
+    <div class="total-big"><small>TOTAL PEDIDO</small><strong id="grandTotal">S/0.00</strong></div>
+    <button id="saveBtn" type="button" class="btn primary">Enviar pedido</button>
+  </div>
+</div>
+
+<script>
+(() => {
+  // Pegar aquí la URL del Apps Script Web App (termina en /exec) — ver apps_script/Code.gs y README.md
+  const SHEET_WEBHOOK_URL = 'PASTE_YOUR_APPS_SCRIPT_URL_HERE';
+
+  const flavors = ['Pork Belly','Atún Mediterráneo','Hongos','BBQ Beef'];
+  const sauces = ['House','Green','Spicy','Mediterranean'];
+  const drinks = ['Oolong','Hibiscus'];
+  const products = [
+    {name:'Pork Belly', price:40, type:'box'},
+    {name:'Atún Mediterráneo', price:40, type:'box'},
+    {name:'Hongos', price:42, type:'box'},
+    {name:'BBQ Beef', price:44, type:'box'},
+    {name:'Miso dashi', price:14, type:'soup'},
+    {name:'Miso shiitake', price:16, type:'soup'},
+    {name:'Oolong', price:12, type:'drink'},
+    {name:'Hibiscus', price:12, type:'drink'}
+  ];
+
+  const qty={}, standSauce={}, extraSauce={};
+  let sets=[], groups=[], trios=[];
+  let lastKitchen={}, lastFinance={};
+
+  const $ = s => document.querySelector(s);
+  const money = n => 'S/' + Number(n||0).toFixed(2);
+  const totalObj = o => Object.values(o).reduce((a,b)=>a+(Number(b)||0),0);
+  const safeNum = v => Math.max(0, Number(v)||0);
+
+  function standaloneBoxCount(){
+    return flavors.reduce((a,f)=>a+(qty[f]||0),0);
+  }
+
+  function makeStepper(label, price, store, key, onChange, limitFn=null){
+    store[key] = store[key] || 0;
+    const row = document.createElement('div'); row.className='row';
+    row.innerHTML = `<div class="name"><b>${label}</b>${price!==null?`<small>${money(price)}</small>`:''}</div>
+      <div class="step"><button type="button" class="minus">−</button><span class="num">0</span><button type="button" class="plus">+</button></div>`;
+    const num=row.querySelector('.num'), minus=row.querySelector('.minus'), plus=row.querySelector('.plus');
+
+    function paint(){
+      num.textContent=store[key];
+      minus.disabled=store[key]<=0;
+      if(limitFn){
+        const max=limitFn();
+        plus.disabled=totalObj(store)>=max;
+      } else plus.disabled=false;
+    }
+
+    minus.addEventListener('click',()=>{
+      store[key]=Math.max(0,store[key]-1);
+      paint(); onChange();
+    });
+
+    plus.addEventListener('click',()=>{
+      if(limitFn){
+        const max=limitFn();
+        if(totalObj(store)>=max) return;
+      }
+      store[key]++;
+      paint(); onChange();
+    });
+
+    row._paint = paint;
+    paint();
+    return row;
+  }
+
+  const standaloneRows=[];
+  products.forEach(p=>{
+    const row=makeStepper(p.name,p.price,qty,p.name,()=>{
+      // If boxes are reduced, trim included sauces automatically so total cannot exceed box count.
+      const max=standaloneBoxCount();
+      let over=totalObj(standSauce)-max;
+      if(over>0){
+        for(const s of sauces.slice().reverse()){
+          while(over>0 && standSauce[s]>0){standSauce[s]--; over--;}
+        }
+      }
+      repaintStandaloneSauces();
+      render();
+    });
+    standaloneRows.push(row);
+    $('#standalone').appendChild(row);
+  });
+
+  const includedSauceRows=[];
+  sauces.forEach(s=>{
+    const row=makeStepper(s,null,standSauce,s,render,standaloneBoxCount);
+    includedSauceRows.push(row);
+    $('#standSauces').appendChild(row);
+  });
+
+  sauces.forEach(s=>$('#extraSauces').appendChild(makeStepper('Salsa '+s,3,extraSauce,s,render)));
+
+  function repaintStandaloneSauces(){
+    includedSauceRows.forEach(r=>r._paint());
+  }
+
+  function makeChoices(values,current,onPick){
+    const wrap=document.createElement('div'); wrap.className='choice-grid';
+    values.forEach(v=>{
+      const b=document.createElement('button'); b.type='button';
+      b.className='choice'+(v===current?' active':''); b.textContent=v;
+      b.addEventListener('click',()=>onPick(v)); wrap.appendChild(b);
+    });
+    return wrap;
+  }
+
+  function addCounterSelector(container,title,obj,keys,max){
+    const header=document.createElement('div'); header.className='counterline';
+    const left=document.createElement('b'); left.textContent=title;
+    const right=document.createElement('strong');
+    header.append(left,right); container.appendChild(header);
+
+    const rows=[];
+    keys.forEach(key=>{
+      const row=document.createElement('div'); row.className='row';
+      row.innerHTML=`<div class="name"><b>${key}</b></div>
+        <div class="step"><button type="button" class="minus">−</button><span class="num">${obj[key]||0}</span><button type="button" class="plus">+</button></div>`;
+      const minus=row.querySelector('.minus'), plus=row.querySelector('.plus'), num=row.querySelector('.num');
+
+      minus.addEventListener('click',()=>{
+        if((obj[key]||0)>0){obj[key]--; repaint(); render();}
+      });
+
+      plus.addEventListener('click',()=>{
+        if(totalObj(obj)<max){obj[key]=(obj[key]||0)+1; repaint(); render();}
+      });
+
+      rows.push({key,minus,plus,num});
+      container.appendChild(row);
+    });
+
+    function repaint(){
+      const t=totalObj(obj);
+      right.textContent=`${t}/${max}`;
+      right.className=t===max?'ok':'bad';
+      rows.forEach(r=>{
+        r.num.textContent=obj[r.key]||0;
+        r.minus.disabled=(obj[r.key]||0)<=0;
+        r.plus.disabled=t>=max;
+      });
+    }
+    repaint();
+  }
+
+  $('#addSet').addEventListener('click',()=>{
+    sets.push({
+      flavor:'Pork Belly',
+      soup:'Miso dashi',
+      drink:'Oolong',
+      sauceMode:'single',
+      singleSauce:'House',
+      trioSauces:{House:0,Green:0,Spicy:0,Mediterranean:0}
+    });
+    drawSets(); render();
+  });
+
+  function drawSets(){
+    const host=$('#sets'); host.innerHTML='';
+
+    sets.forEach((s,i)=>{
+      const c=document.createElement('div'); c.className='config';
+      c.innerHTML=`<div class="config-title"><b>Set ${i+1}</b><button type="button" class="btn danger remove">Eliminar</button></div><b class="note">Gyoza</b>`;
+
+      c.appendChild(makeChoices(flavors,s.flavor,v=>{s.flavor=v;drawSets();render();}));
+      c.insertAdjacentHTML('beforeend','<b class="note">Sopa</b>');
+      c.appendChild(makeChoices(['Miso dashi','Miso shiitake'],s.soup,v=>{s.soup=v;drawSets();render();}));
+      c.insertAdjacentHTML('beforeend','<b class="note">Bebida</b>');
+      c.appendChild(makeChoices(drinks,s.drink,v=>{s.drink=v;drawSets();render();}));
+      c.insertAdjacentHTML('beforeend','<b class="note">Salsa</b>');
+
+      c.appendChild(makeChoices(['1 salsa','Trío +S/4'],s.sauceMode==='single'?'1 salsa':'Trío +S/4',v=>{
+        s.sauceMode=v==='1 salsa'?'single':'trio';
+        drawSets(); render();
+      }));
+
+      if(s.sauceMode==='single'){
+        c.appendChild(makeChoices(sauces,s.singleSauce,v=>{s.singleSauce=v;drawSets();render();}));
+      } else {
+        addCounterSelector(c,'Trío de salsas',s.trioSauces,sauces,3);
+      }
+
+      c.querySelector('.remove').addEventListener('click',()=>{
+        sets.splice(i,1); drawSets(); render();
+      });
+
+      host.appendChild(c);
+    });
+  }
+
+  $('#addGroup').addEventListener('click',()=>{
+    groups.push({
+      flavors:{'Pork Belly':0,'Atún Mediterráneo':0,'Hongos':0,'BBQ Beef':0},
+      drinks:{Oolong:0,Hibiscus:0},
+      sauces:{House:0,Green:0,Spicy:0,Mediterranean:0}
+    });
+    drawGroups(); render();
+  });
+
+  function drawGroups(){
+    const host=$('#groups'); host.innerHTML='';
+
+    groups.forEach((g,i)=>{
+      const c=document.createElement('div'); c.className='config';
+      c.innerHTML=`<div class="config-title"><b>Group Set ${i+1}</b><button type="button" class="btn danger remove">Eliminar</button></div>`;
+
+      addCounterSelector(c,'Cajas de gyozas',g.flavors,flavors,4);
+      addCounterSelector(c,'Bebidas',g.drinks,drinks,4);
+      addCounterSelector(c,'Salsas',g.sauces,sauces,6);
+
+      c.querySelector('.remove').addEventListener('click',()=>{
+        groups.splice(i,1); drawGroups(); render();
+      });
+
+      host.appendChild(c);
+    });
+  }
+
+  $('#trioMinus').addEventListener('click',()=>{
+    if(trios.length){trios.pop(); drawTrios(); render();}
+  });
+
+  $('#trioPlus').addEventListener('click',()=>{
+    trios.push({House:0,Green:0,Spicy:0,Mediterranean:0});
+    drawTrios(); render();
+  });
+
+  function drawTrios(){
+    $('#trioQty').textContent=trios.length;
+    const host=$('#trios'); host.innerHTML='';
+
+    trios.forEach((t,i)=>{
+      const c=document.createElement('div'); c.className='config';
+      c.innerHTML=`<div class="config-title"><b>Trío ${i+1}</b></div>`;
+      addCounterSelector(c,'Salsas',t,sauces,3);
+      host.appendChild(c);
+    });
+  }
+
+  $('#includeDelivery').addEventListener('change',()=>{
+    $('#deliveryWrap').classList.toggle('hidden',!$('#includeDelivery').checked);
+    if(!$('#includeDelivery').checked) $('#delivery').value=0;
+    render();
+  });
+
+  $('#delivery').addEventListener('input',render);
+  $('#manualDiscount').addEventListener('input',render);
+
+  function kitchenSection(title,obj){
+    const total=totalObj(obj);
+    const rows=Object.entries(obj)
+      .filter(([,v])=>v>0)
+      .map(([k,v])=>`<div class="sumrow"><span>${k}</span><b>×${v}</b></div>`)
+      .join('');
+    return `<h3>${title} — TOTAL ${total}</h3>${rows||'<div class="note">—</div>'}`;
+  }
+
+  function calculate(){
+    let subtotal=0;
+    products.forEach(p=>subtotal+=(qty[p.name]||0)*p.price);
+
+    sets.forEach(s=>{
+      subtotal+=58
+        +(s.flavor==='Hongos'?2:s.flavor==='BBQ Beef'?4:0)
+        +(s.soup==='Miso shiitake'?1:0)
+        +(s.sauceMode==='trio'?4:0);
+    });
+
+    subtotal+=groups.length*179;
+    subtotal+=totalObj(extraSauce)*3+trios.length*7;
+
+    const groupDiscount=groups.length*179*0.15;
+    const delivery=$('#includeDelivery').checked?safeNum($('#delivery').value):0;
+    const manualDiscount=safeNum($('#manualDiscount').value);
+    const total=Math.max(0,subtotal-groupDiscount+delivery-manualDiscount);
+
+    return {subtotal,groupDiscount,delivery,manualDiscount,total};
+  }
+
+  function render(){
+    repaintStandaloneSauces();
+
+    const standBoxes=standaloneBoxCount();
+    const chosen=totalObj(standSauce);
+    $('#standSauceWrap').classList.toggle('hidden',standBoxes===0);
+    $('#standSauceStatus').textContent=`${chosen}/${standBoxes}`;
+
+    const kitchen={
+      gyoza:Object.fromEntries(flavors.map(f=>[f,qty[f]||0])),
+      soup:{'Miso dashi':qty['Miso dashi']||0,'Miso shiitake':qty['Miso shiitake']||0},
+      drink:{Oolong:qty.Oolong||0,Hibiscus:qty.Hibiscus||0},
+      sauce:Object.fromEntries(sauces.map(s=>[s,(standSauce[s]||0)+(extraSauce[s]||0)]))
+    };
+
+    sets.forEach(s=>{
+      kitchen.gyoza[s.flavor]++;
+      kitchen.soup[s.soup]++;
+      kitchen.drink[s.drink]++;
+      if(s.sauceMode==='single'){
+        kitchen.sauce[s.singleSauce]++;
+      } else {
+        sauces.forEach(x=>kitchen.sauce[x]+=s.trioSauces[x]||0);
+      }
+    });
+
+    groups.forEach(g=>{
+      flavors.forEach(x=>kitchen.gyoza[x]+=g.flavors[x]||0);
+      drinks.forEach(x=>kitchen.drink[x]+=g.drinks[x]||0);
+      sauces.forEach(x=>kitchen.sauce[x]+=g.sauces[x]||0);
+    });
+
+    trios.forEach(t=>sauces.forEach(x=>kitchen.sauce[x]+=t[x]||0));
+
+    $('#kitchen').innerHTML=
+      kitchenSection('CAJAS DE GYOZAS',kitchen.gyoza)+
+      kitchenSection('SOPAS',kitchen.soup)+
+      kitchenSection('BEBIDAS',kitchen.drink)+
+      kitchenSection('SALSAS',kitchen.sauce);
+
+    const f=calculate();
+    const lines=[];
+
+    products.forEach(p=>{
+      if(qty[p.name]) lines.push([`${p.name} ×${qty[p.name]}`,qty[p.name]*p.price]);
+    });
+
+    sets.forEach((s,i)=>{
+      lines.push([
+        `Gyoza Set ${i+1} · ${s.flavor} · ${s.soup}${s.sauceMode==='trio'?' · Trío':''}`,
+        58+(s.flavor==='Hongos'?2:s.flavor==='BBQ Beef'?4:0)+(s.soup==='Miso shiitake'?1:0)+(s.sauceMode==='trio'?4:0)
+      ]);
+    });
+
+    groups.forEach((g,i)=>lines.push([`Group Set ${i+1}`,179]));
+
+    if(totalObj(extraSauce)) lines.push(['Salsas extra',totalObj(extraSauce)*3]);
+    if(trios.length) lines.push([`Trío de salsas ×${trios.length}`,trios.length*7]);
+
+    let html=lines.map(([n,v])=>`<div class="sumrow"><span>${n}</span><span>${money(v)}</span></div>`).join('')||'<div class="note">Sin productos</div>';
+
+    if(f.groupDiscount) html+=`<div class="sumrow"><b>Promo Group Set -15%</b><b>−${money(f.groupDiscount)}</b></div>`;
+    if(f.delivery) html+=`<div class="sumrow"><span>Delivery</span><span>${money(f.delivery)}</span></div>`;
+    if(f.manualDiscount) html+=`<div class="sumrow"><span>Descuento manual</span><span>−${money(f.manualDiscount)}</span></div>`;
+
+    html+=`<div class="sumrow total"><span>Total</span><span>${money(f.total)}</span></div>`;
+
+    $('#finance').innerHTML=html;
+    $('#grandTotal').textContent=money(f.total);
+
+    lastKitchen=kitchen;
+    lastFinance=f;
+  }
+
+  function validate(){
+    const errors=[];
+    const standBoxes=standaloneBoxCount();
+
+    if(totalObj(standSauce)!==standBoxes){
+      errors.push(`Salsas standalone: ${totalObj(standSauce)}/${standBoxes}.`);
+    }
+
+    sets.forEach((s,i)=>{
+      if(s.sauceMode==='trio' && totalObj(s.trioSauces)!==3){
+        errors.push(`Set ${i+1}: el trío debe tener 3 salsas.`);
+      }
+    });
+
+    groups.forEach((g,i)=>{
+      if(totalObj(g.flavors)!==4) errors.push(`Group ${i+1}: gyozas ${totalObj(g.flavors)}/4.`);
+      if(totalObj(g.drinks)!==4) errors.push(`Group ${i+1}: bebidas ${totalObj(g.drinks)}/4.`);
+      if(totalObj(g.sauces)!==6) errors.push(`Group ${i+1}: salsas ${totalObj(g.sauces)}/6.`);
+    });
+
+    trios.forEach((t,i)=>{
+      if(totalObj(t)!==3) errors.push(`Trío extra ${i+1}: debe tener 3 salsas.`);
+    });
+
+    const box=$('#validationMsg');
+
+    if(errors.length){
+      box.className='error';
+      box.textContent=errors.join(' ');
+      return false;
+    }
+
+    box.className='success';
+    box.textContent='Pedido válido. Listo para conectar al Google Sheet.';
+    return true;
+  }
+
+  function buildPayload(){
+    return {
+      canal:$('#channel').value,
+      cliente:$('#customer').value,
+      telefono:$('#phone').value,
+      entrega:$('#fulfillment').value,
+      horaSolicitada:$('#requestedTime').value,
+      notas:$('#notes').value,
+      kitchen:lastKitchen,
+      finance:lastFinance,
+      setsCount:sets.length,
+      groupsCount:groups.length,
+      triosCount:trios.length,
+      detalle:{qty,standSauce,extraSauce,sets,groups,trios}
+    };
+  }
+
+  async function sendOrder(){
+    const box=$('#validationMsg');
+
+    if(SHEET_WEBHOOK_URL.includes('PASTE_YOUR')){
+      box.className='error';
+      box.textContent='Falta configurar SHEET_WEBHOOK_URL en el HTML (ver README.md / apps_script/Code.gs).';
+      return;
+    }
+
+    const btn=$('#saveBtn');
+    btn.disabled=true; btn.textContent='Enviando...';
+    box.className='note'; box.textContent='Enviando pedido...';
+
+    try{
+      const res=await fetch(SHEET_WEBHOOK_URL,{
+        method:'POST',
+        headers:{'Content-Type':'text/plain;charset=utf-8'},
+        body:JSON.stringify(buildPayload())
+      });
+      const json=await res.json().catch(()=>({ok:true}));
+      if(json.ok===false) throw new Error(json.error||'Error desconocido');
+
+      box.className='success';
+      box.textContent='Pedido enviado y registrado en el Google Sheet.';
+    }catch(err){
+      box.className='error';
+      box.textContent='No se pudo enviar el pedido: '+err.message+'. Verifica tu conexión e intenta de nuevo.';
+    }finally{
+      btn.disabled=false; btn.textContent='Enviar pedido';
+    }
+  }
+
+  $('#saveBtn').addEventListener('click',()=>{
+    if(validate()) sendOrder();
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>
