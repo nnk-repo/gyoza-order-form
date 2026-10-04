@@ -178,7 +178,7 @@ textarea{min-height:82px;resize:vertical}
 
   const qty={}, standSauce={}, extraSauce={};
   let sets=[], groups=[], trios=[];
-  let lastKitchen={}, lastFinance={};
+  let lastKitchen={}, lastFinance={}, lastItems=[];
 
   const $ = s => document.querySelector(s);
   const money = n => 'S/' + Number(n||0).toFixed(2);
@@ -479,22 +479,71 @@ textarea{min-height:82px;resize:vertical}
 
     const f=calculate();
     const lines=[];
+    const items=[];
 
     products.forEach(p=>{
-      if(qty[p.name]) lines.push([`${p.name} ×${qty[p.name]}`,qty[p.name]*p.price]);
+      if(qty[p.name]){
+        lines.push([`${p.name} ×${qty[p.name]}`,qty[p.name]*p.price]);
+        items.push({tipo:'Standalone',producto:p.name,detalle:'',cantidad:qty[p.name],precioUnitario:p.price,precioTotal:qty[p.name]*p.price});
+      }
     });
 
     sets.forEach((s,i)=>{
+      const setPrice=58+(s.flavor==='Hongos'?2:s.flavor==='BBQ Beef'?4:0)+(s.soup==='Miso shiitake'?1:0)+(s.sauceMode==='trio'?4:0);
       lines.push([
         `Gyoza Set ${i+1} · ${s.flavor} · ${s.soup}${s.sauceMode==='trio'?' · Trío':''}`,
-        58+(s.flavor==='Hongos'?2:s.flavor==='BBQ Beef'?4:0)+(s.soup==='Miso shiitake'?1:0)+(s.sauceMode==='trio'?4:0)
+        setPrice
       ]);
+      items.push({
+        tipo:'Gyoza Set',
+        producto:s.flavor,
+        detalle:`${s.soup} · ${s.drink} · ${s.sauceMode==='trio'?'Trío salsas':'Salsa '+s.singleSauce}`,
+        cantidad:1,
+        precioUnitario:setPrice,
+        precioTotal:setPrice
+      });
     });
 
-    groups.forEach((g,i)=>lines.push([`Group Set ${i+1}`,179]));
+    groups.forEach((g,i)=>{
+      lines.push([`Group Set ${i+1}`,179]);
+      const flavorDetail=flavors.filter(x=>g.flavors[x]>0).map(x=>`${x} ×${g.flavors[x]}`).join(', ')||'—';
+      const drinkDetail=drinks.filter(x=>g.drinks[x]>0).map(x=>`${x} ×${g.drinks[x]}`).join(', ')||'—';
+      const sauceDetail=sauces.filter(x=>g.sauces[x]>0).map(x=>`${x} ×${g.sauces[x]}`).join(', ')||'—';
+      items.push({
+        tipo:'Group Set',
+        producto:'Group Set',
+        detalle:`Gyozas: ${flavorDetail} · Bebidas: ${drinkDetail} · Salsas: ${sauceDetail}`,
+        cantidad:1,
+        precioUnitario:179,
+        precioTotal:179*0.85
+      });
+    });
 
-    if(totalObj(extraSauce)) lines.push(['Salsas extra',totalObj(extraSauce)*3]);
-    if(trios.length) lines.push([`Trío de salsas ×${trios.length}`,trios.length*7]);
+    if(totalObj(extraSauce)){
+      lines.push(['Salsas extra',totalObj(extraSauce)*3]);
+      items.push({
+        tipo:'Salsa Extra',
+        producto:'Salsa extra',
+        detalle:sauces.filter(s=>extraSauce[s]>0).map(s=>`${s} ×${extraSauce[s]}`).join(', '),
+        cantidad:totalObj(extraSauce),
+        precioUnitario:3,
+        precioTotal:totalObj(extraSauce)*3
+      });
+    }
+
+    if(trios.length){
+      lines.push([`Trío de salsas ×${trios.length}`,trios.length*7]);
+      trios.forEach((t,i)=>{
+        items.push({
+          tipo:'Trío Salsas',
+          producto:'Trío de salsas',
+          detalle:sauces.filter(s=>t[s]>0).map(s=>`${s} ×${t[s]}`).join(', '),
+          cantidad:1,
+          precioUnitario:7,
+          precioTotal:7
+        });
+      });
+    }
 
     let html=lines.map(([n,v])=>`<div class="sumrow"><span>${n}</span><span>${money(v)}</span></div>`).join('')||'<div class="note">Sin productos</div>';
 
@@ -509,6 +558,7 @@ textarea{min-height:82px;resize:vertical}
 
     lastKitchen=kitchen;
     lastFinance=f;
+    lastItems=items;
   }
 
   function validate(){
@@ -560,6 +610,7 @@ textarea{min-height:82px;resize:vertical}
       resumenFinanciero:$('#finance').innerText,
       kitchen:lastKitchen,
       finance:lastFinance,
+      items:lastItems,
       setsCount:sets.length,
       groupsCount:groups.length,
       triosCount:trios.length,
