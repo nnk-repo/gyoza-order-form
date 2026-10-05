@@ -154,6 +154,7 @@ textarea{min-height:82px;resize:vertical}
   <div class="bottom-inner">
     <div class="total-big"><small>TOTAL PEDIDO</small><strong id="grandTotal">S/0.00</strong></div>
     <button id="saveBtn" type="button" class="btn primary">Enviar pedido</button>
+    <button id="newOrderBtn" type="button" class="btn primary hidden">+ Nuevo pedido</button>
   </div>
 </div>
 
@@ -249,7 +250,12 @@ textarea{min-height:82px;resize:vertical}
     $('#standSauces').appendChild(row);
   });
 
-  sauces.forEach(s=>$('#extraSauces').appendChild(makeStepper('Salsa '+s,3,extraSauce,s,render)));
+  const extraSauceRows=[];
+  sauces.forEach(s=>{
+    const row=makeStepper('Salsa '+s,3,extraSauce,s,render);
+    extraSauceRows.push(row);
+    $('#extraSauces').appendChild(row);
+  });
 
   function repaintStandaloneSauces(){
     includedSauceRows.forEach(r=>r._paint());
@@ -639,18 +645,53 @@ textarea{min-height:82px;resize:vertical}
       if(json.ok===false) throw new Error(json.error||'Error desconocido');
 
       box.className='success';
-      box.textContent='Pedido enviado y registrado en el Google Sheet.';
+      box.textContent='✓ Pedido confirmado y guardado en el Google Sheet.';
+      btn.classList.add('hidden');
+      $('#newOrderBtn').classList.remove('hidden');
     }catch(err){
       box.className='error';
       box.textContent='No se pudo enviar el pedido: '+err.message+'. Verifica tu conexión e intenta de nuevo.';
-    }finally{
       btn.disabled=false; btn.textContent='Enviar pedido';
     }
+  }
+
+  function resetForm(){
+    $('#customer').value='';
+    $('#phone').value='';
+    $('#requestedTime').value='';
+    $('#notes').value='';
+    $('#channel').value='WhatsApp';
+    $('#fulfillment').value='Delivery';
+    $('#includeDelivery').checked=false;
+    $('#deliveryWrap').classList.add('hidden');
+    $('#delivery').value=0;
+    $('#manualDiscount').value=0;
+
+    Object.keys(qty).forEach(k=>qty[k]=0);
+    Object.keys(standSauce).forEach(k=>standSauce[k]=0);
+    Object.keys(extraSauce).forEach(k=>extraSauce[k]=0);
+    sets=[]; groups=[]; trios=[];
+
+    standaloneRows.forEach(r=>r._paint());
+    includedSauceRows.forEach(r=>r._paint());
+    extraSauceRows.forEach(r=>r._paint());
+    drawSets(); drawGroups(); drawTrios();
+    render();
+
+    const box=$('#validationMsg');
+    box.className=''; box.textContent='';
+
+    $('#saveBtn').classList.remove('hidden');
+    $('#saveBtn').disabled=false;
+    $('#saveBtn').textContent='Enviar pedido';
+    $('#newOrderBtn').classList.add('hidden');
   }
 
   $('#saveBtn').addEventListener('click',()=>{
     if(validate()) sendOrder();
   });
+
+  $('#newOrderBtn').addEventListener('click',resetForm);
 
   render();
 })();
