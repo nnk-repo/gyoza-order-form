@@ -71,7 +71,7 @@ textarea{min-height:82px;resize:vertical}
     <div class="grid2">
       <label>Canal
         <select id="channel">
-          <option>WhatsApp</option><option>Rappi</option><option>PedidosYa</option><option>DiDi</option><option>Manual</option>
+          <option>WhatsApp</option><option>Rappi</option><option>PedidosYa</option><option>DiDi</option><option>inDrive</option><option>Manual</option>
         </select>
       </label>
       <label>Cliente <span class="note">(opcional)</span><input id="customer" placeholder="Nombre"/></label>
@@ -106,7 +106,7 @@ textarea{min-height:82px;resize:vertical}
 
   <div class="card">
     <div class="section-head">
-      <div><h2>Group Set</h2><p>S/179 · promo automática -15%</p></div>
+      <div><h2>Group Set</h2><p>S/179</p></div>
       <button id="addGroup" class="btn primary" type="button">+ Group</button>
     </div>
     <div id="groups"></div>
@@ -163,7 +163,7 @@ textarea{min-height:82px;resize:vertical}
   const SHEET_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbyr7-iq6XiZNm2RyvRYcDlAKgoEYpCMLWw-BcHb2tuMEr5eJXrrNholrf7T_kDm2m6S/exec';
 
   const flavors = ['Pork Belly','Atún Mediterráneo','Hongos','BBQ Beef'];
-  const sauces = ['House','Green','Spicy','Mediterranean'];
+  const sauces = ['House','Green','Spicy','Mediterranean','Dulce'];
   const drinks = ['Oolong','Hibiscus'];
   const products = [
     {name:'Pork Belly', price:40, type:'box'},
@@ -310,7 +310,7 @@ textarea{min-height:82px;resize:vertical}
       drink:'Oolong',
       sauceMode:'single',
       singleSauce:'House',
-      trioSauces:{House:0,Green:0,Spicy:0,Mediterranean:0}
+      trioSauces:{House:0,Green:0,Spicy:0,Mediterranean:0,Dulce:0}
     });
     drawSets(); render();
   });
@@ -352,7 +352,7 @@ textarea{min-height:82px;resize:vertical}
     groups.push({
       flavors:{'Pork Belly':0,'Atún Mediterráneo':0,'Hongos':0,'BBQ Beef':0},
       drinks:{Oolong:0,Hibiscus:0},
-      sauces:{House:0,Green:0,Spicy:0,Mediterranean:0}
+      sauces:{House:0,Green:0,Spicy:0,Mediterranean:0,Dulce:0}
     });
     drawGroups(); render();
   });
@@ -381,7 +381,7 @@ textarea{min-height:82px;resize:vertical}
   });
 
   $('#trioPlus').addEventListener('click',()=>{
-    trios.push({House:0,Green:0,Spicy:0,Mediterranean:0});
+    trios.push({House:0,Green:0,Spicy:0,Mediterranean:0,Dulce:0});
     drawTrios(); render();
   });
 
@@ -429,12 +429,11 @@ textarea{min-height:82px;resize:vertical}
     subtotal+=groups.length*179;
     subtotal+=totalObj(extraSauce)*3+trios.length*7;
 
-    const groupDiscount=groups.length*179*0.15;
     const delivery=$('#includeDelivery').checked?safeNum($('#delivery').value):0;
     const manualDiscount=safeNum($('#manualDiscount').value);
-    const total=Math.max(0,subtotal-groupDiscount+delivery-manualDiscount);
+    const total=Math.max(0,subtotal+delivery-manualDiscount);
 
-    return {subtotal,groupDiscount,delivery,manualDiscount,total};
+    return {subtotal,delivery,manualDiscount,total};
   }
 
   function render(){
@@ -515,7 +514,7 @@ textarea{min-height:82px;resize:vertical}
         detalle:`Gyozas: ${flavorDetail} · Bebidas: ${drinkDetail} · Salsas: ${sauceDetail}`,
         cantidad:1,
         precioUnitario:179,
-        precioTotal:179*0.85
+        precioTotal:179
       });
     });
 
@@ -547,7 +546,6 @@ textarea{min-height:82px;resize:vertical}
 
     let html=lines.map(([n,v])=>`<div class="sumrow"><span>${n}</span><span>${money(v)}</span></div>`).join('')||'<div class="note">Sin productos</div>';
 
-    if(f.groupDiscount) html+=`<div class="sumrow"><b>Promo Group Set -15%</b><b>−${money(f.groupDiscount)}</b></div>`;
     if(f.delivery) html+=`<div class="sumrow"><span>Delivery</span><span>${money(f.delivery)}</span></div>`;
     if(f.manualDiscount) html+=`<div class="sumrow"><span>Descuento manual</span><span>−${money(f.manualDiscount)}</span></div>`;
 
