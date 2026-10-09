@@ -85,6 +85,11 @@ textarea{min-height:82px;resize:vertical}
         <select id="fulfillment"><option>Delivery</option><option>Pickup</option></select>
       </label>
     </div>
+    <label class="toggleline" style="margin-top:10px"><input id="backdateToggle" type="checkbox"/> Pedido de otra fecha (programado o atrasado)</label>
+    <div id="backdateWrap" class="hidden grid2" style="margin-top:10px">
+      <label>Fecha<input id="backdateDate" type="date"/></label>
+      <label>Hora<input id="backdateTime" type="time"/></label>
+    </div>
   </div>
 
   <div class="card">
@@ -176,6 +181,7 @@ textarea{min-height:82px;resize:vertical}
     {name:'Atún Mediterráneo', price:40, type:'box'},
     {name:'Hongos', price:42, type:'box'},
     {name:'BBQ Beef', price:44, type:'box'},
+    {name:'Caja Mixta', price:44, type:'box'},
     {name:'Miso dashi', price:14, type:'soup'},
     {name:'Miso shiitake', price:16, type:'soup'},
     {name:'Oolong', price:12, type:'drink'},
@@ -191,8 +197,10 @@ textarea{min-height:82px;resize:vertical}
   const totalObj = o => Object.values(o).reduce((a,b)=>a+(Number(b)||0),0);
   const safeNum = v => Math.max(0, Number(v)||0);
 
+  const boxProducts = products.filter(p=>p.type==='box');
+
   function standaloneBoxCount(){
-    return flavors.reduce((a,f)=>a+(qty[f]||0),0);
+    return boxProducts.reduce((a,p)=>a+(qty[p.name]||0),0);
   }
 
   function makeStepper(label, price, store, key, onChange, limitFn=null){
@@ -417,6 +425,17 @@ textarea{min-height:82px;resize:vertical}
   $('#delivery').addEventListener('input',render);
   $('#manualDiscount').addEventListener('input',render);
 
+  $('#backdateToggle').addEventListener('change',()=>{
+    const on=$('#backdateToggle').checked;
+    $('#backdateWrap').classList.toggle('hidden',!on);
+    if(on && !$('#backdateDate').value){
+      const now=new Date();
+      const pad=n=>String(n).padStart(2,'0');
+      $('#backdateDate').value=`${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}`;
+      $('#backdateTime').value=`${pad(now.getHours())}:${pad(now.getMinutes())}`;
+    }
+  });
+
   function kitchenSection(title,obj){
     const total=totalObj(obj);
     const rows=Object.entries(obj)
@@ -456,7 +475,7 @@ textarea{min-height:82px;resize:vertical}
     $('#standSauceStatus').textContent=`${chosen}/${standBoxes}`;
 
     const kitchen={
-      gyoza:Object.fromEntries(flavors.map(f=>[f,qty[f]||0])),
+      gyoza:Object.fromEntries(boxProducts.map(p=>[p.name,qty[p.name]||0])),
       soup:{'Miso dashi':qty['Miso dashi']||0,'Miso shiitake':qty['Miso shiitake']||0},
       drink:{Oolong:qty.Oolong||0,Hibiscus:qty.Hibiscus||0},
       sauce:Object.fromEntries(sauces.map(s=>[s,(standSauce[s]||0)+(extraSauce[s]||0)]))
@@ -615,6 +634,8 @@ textarea{min-height:82px;resize:vertical}
       entrega:$('#fulfillment').value,
       horaSolicitada:$('#requestedTime').value,
       notas:$('#notes').value,
+      fechaPedidoManual:$('#backdateToggle').checked?$('#backdateDate').value:'',
+      horaPedidoManual:$('#backdateToggle').checked?$('#backdateTime').value:'',
       resumenCocina:$('#kitchen').innerText,
       resumenFinanciero:$('#finance').innerText,
       kitchen:lastKitchen,
@@ -671,6 +692,10 @@ textarea{min-height:82px;resize:vertical}
     $('#deliveryWrap').classList.add('hidden');
     $('#delivery').value=0;
     $('#manualDiscount').value=0;
+    $('#backdateToggle').checked=false;
+    $('#backdateWrap').classList.add('hidden');
+    $('#backdateDate').value='';
+    $('#backdateTime').value='';
 
     Object.keys(qty).forEach(k=>qty[k]=0);
     Object.keys(standSauce).forEach(k=>standSauce[k]=0);
