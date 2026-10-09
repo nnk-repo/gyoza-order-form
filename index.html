@@ -173,7 +173,7 @@ textarea{min-height:82px;resize:vertical}
   // Pegar aquí la URL del Apps Script Web App (termina en /exec) — ver apps_script/Code.gs y README.md
   const SHEET_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbyr7-iq6XiZNm2RyvRYcDlAKgoEYpCMLWw-BcHb2tuMEr5eJXrrNholrf7T_kDm2m6S/exec';
 
-  const flavors = ['Pork Belly','Atún Mediterráneo','Hongos','BBQ Beef'];
+  const flavors = ['Pork Belly','Atún Mediterráneo','Hongos','BBQ Beef','Caja Mixta'];
   const sauces = ['House','Green','Spicy','Mediterranean','Dulce'];
   const drinks = ['Oolong','Hibiscus'];
   const products = [
@@ -369,7 +369,7 @@ textarea{min-height:82px;resize:vertical}
 
   $('#addGroup').addEventListener('click',()=>{
     groups.push({
-      flavors:{'Pork Belly':0,'Atún Mediterráneo':0,'Hongos':0,'BBQ Beef':0},
+      flavors:{'Pork Belly':0,'Atún Mediterráneo':0,'Hongos':0,'BBQ Beef':0,'Caja Mixta':0},
       drinks:{Oolong:0,Hibiscus:0},
       sauces:{House:0,Green:0,Spicy:0,Mediterranean:0,Dulce:0}
     });
