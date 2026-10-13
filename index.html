@@ -108,7 +108,7 @@ textarea{min-height:82px;resize:vertical}
 
   <div class="card">
     <div class="section-head">
-      <div><h2>Gyoza Set</h2><p>S/58 base · Hongos +2 · BBQ +4 · Shiitake +1</p></div>
+      <div><h2>Gyoza Set</h2><p>S/58 base · Hongos +2 · BBQ +4 · Mixta +4 · Shiitake +1</p></div>
       <button id="addSet" class="btn primary" type="button">+ Set</button>
     </div>
     <div id="sets"></div>
@@ -451,7 +451,7 @@ textarea{min-height:82px;resize:vertical}
 
     sets.forEach(s=>{
       subtotal+=58
-        +(s.flavor==='Hongos'?2:s.flavor==='BBQ Beef'?4:0)
+        +(s.flavor==='Hongos'?2:(s.flavor==='BBQ Beef'||s.flavor==='Caja Mixta')?4:0)
         +(s.soup==='Miso shiitake'?1:0)
         +(s.sauceMode==='trio'?4:0);
     });
@@ -518,7 +518,7 @@ textarea{min-height:82px;resize:vertical}
     });
 
     sets.forEach((s,i)=>{
-      const setPrice=58+(s.flavor==='Hongos'?2:s.flavor==='BBQ Beef'?4:0)+(s.soup==='Miso shiitake'?1:0)+(s.sauceMode==='trio'?4:0);
+      const setPrice=58+(s.flavor==='Hongos'?2:(s.flavor==='BBQ Beef'||s.flavor==='Caja Mixta')?4:0)+(s.soup==='Miso shiitake'?1:0)+(s.sauceMode==='trio'?4:0);
       lines.push([
         `Gyoza Set ${i+1} · ${s.flavor} · ${s.soup}${s.sauceMode==='trio'?' · Trío':''}`,
         setPrice
