@@ -108,7 +108,7 @@ textarea{min-height:82px;resize:vertical}
 
   <div class="card">
     <div class="section-head">
-      <div><h2>Gyoza Set</h2><p>S/58 base · Hongos +2 · BBQ +4 · Mixta +4 · Shiitake +1</p></div>
+      <div><h2>Gyoza Set</h2><p>S/58 base · Hongos +2 · BBQ +4 · Mixta +4 · Langostinos +6 · Shiitake +1</p></div>
       <button id="addSet" class="btn primary" type="button">+ Set</button>
     </div>
     <div id="sets"></div>
@@ -173,7 +173,9 @@ textarea{min-height:82px;resize:vertical}
   // Pegar aquí la URL del Apps Script Web App (termina en /exec) — ver apps_script/Code.gs y README.md
   const SHEET_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbyr7-iq6XiZNm2RyvRYcDlAKgoEYpCMLWw-BcHb2tuMEr5eJXrrNholrf7T_kDm2m6S/exec';
 
-  const flavors = ['Pork Belly','Atún Mediterráneo','Hongos','BBQ Beef','Caja Mixta'];
+  const flavors = ['Pork Belly','Atún Mediterráneo','Hongos','BBQ Beef','Caja Mixta','Langostinos al Ajillo'];
+  // Recargo por sabor dentro de un Gyoza Set (sobre S/58 base). Group Set no tiene recargos.
+  const setFlavorSurcharge = {'Hongos':2,'BBQ Beef':4,'Caja Mixta':4,'Langostinos al Ajillo':6};
   const sauces = ['House','Green','Spicy','Mediterranean','Dulce'];
   const drinks = ['Oolong','Hibiscus'];
   const products = [
@@ -182,6 +184,7 @@ textarea{min-height:82px;resize:vertical}
     {name:'Hongos', price:42, type:'box'},
     {name:'BBQ Beef', price:44, type:'box'},
     {name:'Caja Mixta', price:44, type:'box'},
+    {name:'Langostinos al Ajillo', price:46, type:'box'},
     {name:'Miso dashi', price:14, type:'soup'},
     {name:'Miso shiitake', price:16, type:'soup'},
     {name:'Oolong', price:12, type:'drink'},
@@ -369,7 +372,7 @@ textarea{min-height:82px;resize:vertical}
 
   $('#addGroup').addEventListener('click',()=>{
     groups.push({
-      flavors:{'Pork Belly':0,'Atún Mediterráneo':0,'Hongos':0,'BBQ Beef':0,'Caja Mixta':0},
+      flavors:Object.fromEntries(flavors.map(x=>[x,0])),
       drinks:{Oolong:0,Hibiscus:0},
       sauces:{House:0,Green:0,Spicy:0,Mediterranean:0,Dulce:0}
     });
@@ -451,7 +454,7 @@ textarea{min-height:82px;resize:vertical}
 
     sets.forEach(s=>{
       subtotal+=58
-        +(s.flavor==='Hongos'?2:(s.flavor==='BBQ Beef'||s.flavor==='Caja Mixta')?4:0)
+        +(setFlavorSurcharge[s.flavor]||0)
         +(s.soup==='Miso shiitake'?1:0)
         +(s.sauceMode==='trio'?4:0);
     });
@@ -518,7 +521,7 @@ textarea{min-height:82px;resize:vertical}
     });
 
     sets.forEach((s,i)=>{
-      const setPrice=58+(s.flavor==='Hongos'?2:(s.flavor==='BBQ Beef'||s.flavor==='Caja Mixta')?4:0)+(s.soup==='Miso shiitake'?1:0)+(s.sauceMode==='trio'?4:0);
+      const setPrice=58+(setFlavorSurcharge[s.flavor]||0)+(s.soup==='Miso shiitake'?1:0)+(s.sauceMode==='trio'?4:0);
       lines.push([
         `Gyoza Set ${i+1} · ${s.flavor} · ${s.soup}${s.sauceMode==='trio'?' · Trío':''}`,
         setPrice
